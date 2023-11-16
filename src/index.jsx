@@ -31,11 +31,11 @@ const data = useSignal({ message: "", phoneNumber: "" });
       // },
     })
       .then((res) => res.json())
-      .then((res) => (res ? sortmessages(res) : console.log("empty")))
+      .then((res) => (res ? sortmessages(res) : console.log("empty fetch useEffect")))
       .then((res) => users.value= res)
-      .then((res) => console.log("soy users fetch", res))
+      .then((res) => console.log("im fetch", res))
       .catch((error) => console.error("Error:", error));
-    console.log("soy users fetch", users);
+    
 
    
     document.querySelector('#sendMessage').addEventListener('keypress', function (e) {
@@ -47,18 +47,23 @@ const data = useSignal({ message: "", phoneNumber: "" });
   
    
   });
-  let consola = ()=>{
-    console.log("testeando input event")
-  }
+  
   useEffect(() => {
     const connect = () => {
       let Sock = new SockJS("https://mindqubewhatsapp.onrender.com/ws");
-      console.log("soy sock", Sock);
+      console.log("im sock", Sock);
       stompClient = over(Sock);
       stompClient.connect({}, onConnected, onError);
     };
     connect();
   },[]);
+
+  //useEffect(() => {
+    // let file = document.getElementsByName("file-input")[0]
+    // file.addEventListener("change", (e) => {
+    //   console.log(e);
+    // });
+  //}, []);
 
   const sortmessages = (array) => {
     for (let i = 0; i < array.length; i++) {
@@ -78,34 +83,28 @@ const data = useSignal({ message: "", phoneNumber: "" });
 
   const onMessageReceived = (payload) => {
     var payloadData = JSON.parse(payload.body);
-    console.log("soy payloadData",payloadData);
-    console.log("soy users not iterable2", users.value);
+    console.log("im payloadData",payloadData);
+    
     if (payloadData.type === "new user") {
       console.log("new user");
       if(!users.value.length){
         users.value = [payloadData.user]
       } else {
-        users.value = [...users.value].unshift(payloadData.user);
+        // let updateUserList = [...users.value,payloadData.user]
+        // users.value = sortmessages(updateUserList);
+        // console.log("im new user result", users.value);
+        users.value = [payloadData.user,...users.value]
         }
       }
     if (payloadData.type === "new message") {
-      console.log("soy users not iterable", users.value);
-      users.value = users.value.map((e)=>
+      
+      let messageAdded = [...users.value].map((e)=>
         {if(e.phone === payloadData.phone){
            e.whatsapp.push(payloadData.message) 
       }
     return e})
-      // let userMessageToAdd = users.value.find((e) => e.phone === payloadData.phone);
-
-      // console.log("soy user message", userMessageToAdd);
-      // let test = userMessageToAdd.whatsapp.push(payloadData.message);
-      // userMessageToAdd.whatsapp = test
-      // console.log("soy user message2", userMessageToAdd);
-      //let updateList = [...users.value, userMessageToAdd];
-      //console.log("soy el problema", updateList);
-      //users.value = updateList;
-      console.log("soy user value",users.value);
-    }
+    users.value = sortmessages(messageAdded)
+     }
     if (payloadData.type === "update message") {
       console.log("update message");
       users.value = users.value.map(e=>{
@@ -116,7 +115,7 @@ const data = useSignal({ message: "", phoneNumber: "" });
           a.status = payloadData.status
         } return a})
       }return e})
-      console.log("soy user value2",users.value);
+      
     }
   };
                  
@@ -131,7 +130,7 @@ const data = useSignal({ message: "", phoneNumber: "" });
 
   const changeChatuser = (e) => {
     const newChat = users.value.find((item) => item.id === e);
-    console.log(newChat);
+    
     chatMessages.value = newChat;
    
   };
@@ -148,7 +147,7 @@ const data = useSignal({ message: "", phoneNumber: "" });
         "Content-Type": "application/json",
       },
     })
-      .then((res) => {console.log("soy res",res) ;return res})
+      .then((res) => {console.log("im fetch res",res) ;return res})
       .then((res) => res.json())
       .then((res) =>
         res
@@ -157,24 +156,18 @@ const data = useSignal({ message: "", phoneNumber: "" });
       )
      .catch((error) => console.error("Error:", error));
      inputMessage.value = ""
-    console.log("soy enviando", inputMessage);
+    
   };
 
-  const saveMindqubeMessage = (payload) => { //need to configure for the templates
-    console.log("soy payload de savemindqubemessage", payload);
-    
+  const saveMindqubeMessage = (payload) => { //need configure for the templates
     users.value = users.value.map(e=> {if(e.phone === payload.phone){
       e.whatsapp.push(payload.message)
     } return e})
-   
-    
-  };
+   };
 
   const handleInput = (e) => {
     inputMessage.value = e.target.value;
-   
-    console.log("soy state", inputMessage.value);
-  };
+   };
 
   return (
     <>
@@ -198,7 +191,7 @@ const data = useSignal({ message: "", phoneNumber: "" });
                 <div key={i} className="rightMessage">
                   <div
                     className={`background-white text ${
-                      e.name === "Mindqube" ? "rightMessageInside" : ""
+                      e.name === "Mindqube" ? "rightMessageInside" : "marginLeft"
                     }`}
                   >
                     <div>{e.name}</div>
@@ -222,6 +215,10 @@ const data = useSignal({ message: "", phoneNumber: "" });
             <button className="button" onClick={sendMessage}>
               <SendHorizontal size={50} />
             </button>
+            {/* <input type="file" id="file-input" name="file-input" className="hidden"/>
+            <label for="file-input">choose image</label> */}
+
+
           </div>
         </article>
       </div>
